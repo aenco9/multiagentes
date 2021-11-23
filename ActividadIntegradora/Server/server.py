@@ -7,15 +7,13 @@ width = 10
 height = 10
 agentModel = None
 currentStep = 0
-cajas=10
+value=1
 
 app = Flask("Robots")
 
-# @app.route('/', methods=['POST', 'GET'])
-
 @app.route('/init', methods=['POST', 'GET'])
 def initModel():
-    global currentStep, agentModel, number_agents, width, height, cajas
+    global currentStep, agentModel, number_agents, width, height, value
 
     if request.method == 'POST':
         number_agents = int(request.form.get('NAgents'))
@@ -26,8 +24,7 @@ def initModel():
 
         print(request.form)
         print(number_agents, width, height)
-        agentModel = ArrangamentModel(number_agents, width, height, density)
-
+        agentModel = ArrangementModel(number_agents, width, height, density)
         return jsonify({"message":"Parameters recieved, model initiated."})
 
 @app.route('/getRobots', methods=['GET'])
@@ -39,7 +36,7 @@ def getAgents():
         for (a,x,z) in agentModel.grid.coord_iter():
             for agents in a:
                 if isinstance(agents, BoxMover):
-                    robotPositions.append({"x": x, "y":1, "z":z})
+                    robotPositions.append({"x": x, "y":0, "z":z})
         return jsonify({'positions':robotPositions})
 
 @app.route('/getBoxes', methods=['GET'])
@@ -50,7 +47,7 @@ def getObstacles():
         for (a,x,z) in agentModel.grid.coord_iter():
             for agents in a:
                 if isinstance(agents, Box) and agents.color==1:
-                    boxPositions.append({"x": x, "y":1, "z":z})
+                    boxPositions.append({"x": x, "y":0.5, "z":z})
         return jsonify({'positions':boxPositions})
 
 @app.route('/update', methods=['GET'])
@@ -60,6 +57,12 @@ def updateModel():
         agentModel.step()
         currentStep += 1
         return jsonify({'message':f'Model updated to step {currentStep}.', 'currentStep':currentStep})
+
+@app.route('/finish', methods=['GET'])
+def finish():
+    global agentModel
+    if request.method == 'GET':
+        return str(agentModel.count_left())
 
 if __name__=='__main__':
     app.run(host="localhost", port=8585, debug=True)

@@ -1,8 +1,4 @@
-﻿// TC2008B. Sistemas Multiagentes y Gráficas Computacionales
-// C# client to interact with Python. Based on the code provided by Sergio Ruiz.
-// Octavio Navarro. October 2021
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -18,10 +14,11 @@ public class AgentController : MonoBehaviour
 {
     string serverUrl = "http://localhost:8585";
     string getAgentsEndpoint = "/getRobots";
-    string getObstaclesEndpoint = "/getBoxes";
+    string getboxEndpoint = "/getBoxes";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
-    AgentData carsData, obstacleData;
+    string end= "/finish";
+    AgentData robotsData, boxData;
     GameObject[] agents;
     GameObject[] boxes;
     List<Vector3> oldPositions;
@@ -30,15 +27,15 @@ public class AgentController : MonoBehaviour
     // Pause the simulation while we get the update from the server
     bool hold = false;
     int piled=0;
-    public GameObject carPrefab, obstaclePrefab, floor;
+    public GameObject robotPrefab, boxPrefab, rackPrefab, floor;
     public int NAgents, width, height;
     public float density;
     public float timeToUpdate = 5.0f, timer, dt;
 
     void Start()
     {
-        carsData = new AgentData();
-        obstacleData = new AgentData();
+        robotsData = new AgentData();
+        boxData = new AgentData();
         oldPositions = new List<Vector3>();
         newPositions = new List<Vector3>();
 
@@ -48,9 +45,10 @@ public class AgentController : MonoBehaviour
         floor.transform.localPosition = new Vector3((float)width/2-0.5f, 0, (float)height/2-0.5f);
         
         timer = timeToUpdate;
+        Instantiate(rackPrefab, new Vector3(0,0.5f,0), Quaternion.identity);
 
         for(int i = 0; i < NAgents; i++)
-            agents[i] = Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
+            agents[i] = Instantiate(robotPrefab, Vector3.zero, Quaternion.identity);
 
         StartCoroutine(SendConfiguration());
     }
@@ -94,12 +92,29 @@ public class AgentController : MonoBehaviour
         else 
         {
             StartCoroutine(GetAgentData());
-            StartCoroutine(updateObstacleData());
+            StartCoroutine(updateboxData());
+            StartCoroutine(checkStop());
         }
     }
 
-    IEnumerator SendConfiguration()
+    IEnumerator checkStop()
     {
+        UnityWebRequest www = UnityWebRequest.Get(serverUrl + end);
+        yield return www.SendWebRequest();
+ 
+        if (www.result != UnityWebRequest.Result.Success)
+            Debug.Log(www.error);
+        else 
+        {
+            Debug.Log(www.downloadHandler.text);
+            if (www.downloadHandler.text=="0"){
+                
+                EditorApplication.isPlaying = false;
+            }
+        }
+    }
+
+    IEnumerator SendConfiguration(){
         WWWForm form = new WWWForm();
 
         form.AddField("NAgents", NAgents.ToString());
@@ -121,7 +136,7 @@ public class AgentController : MonoBehaviour
             Debug.Log("Configuration upload complete!");
             Debug.Log("Getting Agents positions");
             StartCoroutine(GetAgentData());
-            StartCoroutine(GetObstacleData());
+            StartCoroutine(GetboxData());
         }
     }
 
@@ -134,14 +149,14 @@ public class AgentController : MonoBehaviour
             Debug.Log(www.error);
         else 
         {
-            carsData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+            robotsData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
 
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
 
             newPositions.Clear();
 
-            foreach(Vector3 v in carsData.positions)
+            foreach(Vector3 v in robotsData.positions)
                 newPositions.Add(v);
             hold=false;
         }
@@ -149,55 +164,51 @@ public class AgentController : MonoBehaviour
         
     }
 
-    IEnumerator GetObstacleData() 
+    IEnumerator GetboxData() 
     {
-        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getObstaclesEndpoint);
+        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getboxEndpoint);
         yield return www.SendWebRequest();
  
         if (www.result != UnityWebRequest.Result.Success)
             Debug.Log(www.error);
         else 
         {
-            obstacleData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
-            boxes = new GameObject[obstacleData.positions.Count];
+            boxData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+            boxes = new GameObject[boxData.positions.Count];
             int j=0;
-            foreach(Vector3 position in obstacleData.positions)
+            foreach(Vector3 position in boxData.positions)
             {
-                boxes[j]=Instantiate(obstaclePrefab, position, Quaternion.identity);
+                boxes[j]=Instantiate(boxPrefab, position, Quaternion.identity);
                 j+=1;
             }
         }
     }
 
-    IEnumerator updateObstacleData() 
+    IEnumerator updateboxData() 
     {
-        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getObstaclesEndpoint);
+        UnityWebRequest www = UnityWebRequest.Get(serverUrl + getboxEndpoint);
         yield return www.SendWebRequest();
-        Vector3 deposito= new Vector3(0,1,0);
+        Vector3 deposito= new Vector3(0,0.5f,0);
         if (www.result != UnityWebRequest.Result.Success)
             Debug.Log(www.error);
         else 
         {   
 
-            obstacleData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
+            boxData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
             foreach(GameObject box in boxes)
             {
                 
                 bool picked=true;
-                foreach(Vector3 position in obstacleData.positions){
+                foreach(Vector3 position in boxData.positions){
                     if (position== box.transform.position){
                         picked=false;
                         break;
                     }
                 }
-                if (piled==0 && picked){
-                    box.transform.position=deposito;
-                    piled+=1;
-                }
-                else if (picked && box.transform.position!= deposito){
+                if (picked && box.transform.position!= deposito){
                     box.GetComponent<Renderer>().enabled = false;
                 }
-                //Debug.Log(box.transform.position);
+
             }
         }
     }

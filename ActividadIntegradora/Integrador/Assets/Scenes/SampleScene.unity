@@ -351,7 +351,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 3238723da0297a8478a1ead06fd56f84, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -424,12 +424,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72cd3f8790aab5e4f8436e171ca92d70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  carPrefab: {fileID: 993549348249905, guid: 79be18bd87cc45149a46196fff7ea2be, type: 3}
-  obstaclePrefab: {fileID: 961990229689801968, guid: 04e6027b6059d2e4f943e4ac1e4c35d6, type: 3}
+  robotPrefab: {fileID: 1623306197481947947, guid: 9578e078c2284b449b9b4249abcfad7c, type: 3}
+  boxPrefab: {fileID: 961990229689801968, guid: 04e6027b6059d2e4f943e4ac1e4c35d6, type: 3}
+  rackPrefab: {fileID: 993549348249905, guid: 79be18bd87cc45149a46196fff7ea2be, type: 3}
   floor: {fileID: 1024671294}
-  NAgents: 20
-  width: 20
-  height: 20
+  NAgents: 5
+  width: 10
+  height: 10
   density: 0.1
   timeToUpdate: 0.1
   timer: 0

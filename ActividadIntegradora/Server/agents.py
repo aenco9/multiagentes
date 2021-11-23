@@ -173,7 +173,7 @@ class Box(Agent):
     def step(self):
         pass
 
-class ArrangamentModel(Model):
+class ArrangementModel(Model):
     """A model with some number of agents."""
     
     def __init__(self, N, width, height, density, coords=(0,0)):
@@ -215,22 +215,26 @@ class ArrangamentModel(Model):
     def step(self):
         self.datacollector.collect(self)
         # Halt if no more boxes left to pile
-        if self.count_left(self) == 0:
+        if self.count_left() == 0:
             self.running = False
         self.schedule.step()
         
         
-    @staticmethod
     def count_left(self):
         '''
         Helper method to count boxes that are piled
         '''
         count = 0
+        busyBots=0
         for agent in self.schedule.agents:
             if isinstance(agent, Box):
                 if (agent.piled == False and agent.color==1 and agent.pos!=self.destination):
                     count += 1
-        return count
+        for agent in self.schedule.agents:
+            if isinstance(agent, BoxMover):
+                if (agent.color == 3):
+                    busyBots += 1
+        return count+busyBots
 
 
 
