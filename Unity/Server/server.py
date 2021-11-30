@@ -43,11 +43,22 @@ def getAgents():
 
     if request.method == 'GET':
         carPositions = []
+        carData=[]
         for (a,x,z) in agentModel.grid.coord_iter():
             for agents in a:
                 if isinstance(agents, Car):
                     carPositions.append({"x": x, "y":0, "z":z})
-        return jsonify({'positions':carPositions})
+                    dir=0
+                    if agents.direction=="North":
+                        dir=1
+                    elif agents.direction=="West":
+                        dir=2
+                    elif agents.direction=="South":
+                        dir =3
+                    elif agents.direction=="East":
+                        dir=4
+                    carData.append({"x": int(agents.unique_id[-1]), "y":dir, "z":0})
+        return jsonify({'positions':carPositions, 'data':carData})
 
 @app.route('/update', methods=['GET'])
 def updateModel():

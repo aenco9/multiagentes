@@ -8,6 +8,8 @@ using UnityEngine.Networking;
 public class AgentData
 {
     public List<Vector3> positions;
+
+    public List<Vector3> data;
 }
 
 public class AgentController : MonoBehaviour
@@ -21,6 +23,9 @@ public class AgentController : MonoBehaviour
     GameObject[] agents;
     List<Vector3> oldPositions;
     List<Vector3> newPositions;
+
+    List<Vector3> oldPositionsData;
+    List<Vector3> newPositionsData;
     // Pause the simulation while we get the update from the server
     bool hold = false;
     public GameObject carPrefab;
@@ -33,6 +38,8 @@ public class AgentController : MonoBehaviour
         carData = new AgentData();
         oldPositions = new List<Vector3>();
         newPositions = new List<Vector3>();
+        oldPositionsData = new List<Vector3>();
+        newPositionsData = new List<Vector3>();
 
         agents = new GameObject[NAgents];
 
@@ -62,12 +69,16 @@ public class AgentController : MonoBehaviour
         {
             for (int s = 0; s < agents.Length; s++)
             {
-                Vector3 interpolated = Vector3.Lerp(oldPositions[s], newPositions[s], dt);
-                agents[s].transform.localPosition = interpolated;
-                
-                Vector3 dir = oldPositions[s] - newPositions[s];
-                agents[s].transform.rotation = Quaternion.LookRotation(dir);
-                
+                for(int aa=0; aa<agents.Length; aa++){
+                    if (oldPositionsData[s].x==newPositionsData[aa].x){
+                        Vector3 interpolated = Vector3.Lerp(oldPositions[s], newPositions[aa], dt);
+                        agents[s].transform.localPosition = interpolated;
+                    
+                        Vector3 dir = oldPositions[s] - newPositions[aa];
+                        agents[s].transform.rotation = Quaternion.LookRotation(-dir);
+                        break;
+                    }
+                }
             }
             // Move time from the last frame
             timer += Time.deltaTime;
@@ -119,14 +130,16 @@ public class AgentController : MonoBehaviour
         else 
         {
             carData = JsonUtility.FromJson<AgentData>(www.downloadHandler.text);
-
             // Store the old positions for each agent
             oldPositions = new List<Vector3>(newPositions);
-
+            oldPositionsData = new List<Vector3>(newPositionsData);
             newPositions.Clear();
+            newPositionsData.Clear();
 
             foreach(Vector3 v in carData.positions)
                 newPositions.Add(v);
+            foreach(Vector3 v in carData.data)
+                newPositionsData.Add(v);
             hold=false;
         }
 

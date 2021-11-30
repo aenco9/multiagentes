@@ -48,46 +48,107 @@ def time_limit(seconds):
 
 class Car(Agent):
     """ An agent that moves boxes to certain locations. """
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, destinyCords):
         super().__init__(unique_id, model)
         self.color = 1
         self.moves = 0
         self.direction = None
+        self.destiny = destinyCords
 
     def move(self):
-        self.check_turn()
+        
+        
         self.update_direction()
         nc = self.get_neighborhood_content()
         y, x  = self.pos
-        print(nc)
-        print(self.direction)
+        yd, xd = self.destiny
         
-        self.model.grid.move_agent(self, (y-1,x))
+        print(self.destiny)
+        print(self.pos)
+        print("...")
+        if((y,x+1) == (yd, xd) or (y,x-1) == (yd, xd) or (y+1,x) == (yd, xd) or (y-1,x) == (yd, xd)):
+            self.model.grid.move_agent(self, (yd,xd))
+        
+        
+            
+        elif(self.direction == "East" and  (len(nc) > 5 and nc[6] == "v") and self.check_proximity(4)):
+            self.check_turn(1)
+        elif(self.direction == "East"):
+            self.model.grid.move_agent(self, (y,x+1))
+        elif(self.direction == "North" and  (len(nc) > 5 and nc[4] == ">") and self.check_proximity(2)):
+            self.check_turn(2)
+        elif(self.direction == "North"):
+            self.model.grid.move_agent(self, (y-1,x))
+        elif(self.direction == "South" and  (len(nc) > 5 and nc[3] == "<") and self.check_proximity(3)):
+            self.check_turn(3)
+        elif(self.direction == "South"):
+            self.model.grid.move_agent(self, (y+1,x))
+        elif(self.direction == "West" and  (len(nc) > 5 and nc[1] == "^") and self.check_proximity(1)):
+            self.check_turn(4)
+        elif(self.direction == "West"):
+            self.model.grid.move_agent(self, (y,x-1))
+            
+        elif(self.direction == "Destiny"):
+            pass
+        else:
+            self.model.grid.move_agent(self, (y-1,x))
+            
+        
         
         self.moves += 1
         
-    def check_turn(self):
+    def check_turn(self, case):
         nc = self.get_neighborhood_content()
         y, x  = self.pos
         # if vuelta en el carril interior
-        if (self.direction == "East" and  nc[-1] == "v"):
+        
+        
+        if(case == 1):
+            self.model.grid.move_agent(self, (y+1,x))
+        elif(case == 2):
             self.model.grid.move_agent(self, (y,x+1))
-            self.model.grid.move_agent(self, (y+1,x))
-        elif (self.direction == "South" and  nc[5] == "<"):
-            self.model.grid.move_agent(self, (y+1,x))
+        elif(case == 3):
             self.model.grid.move_agent(self, (y,x-1))
-        elif (self.direction == "West" and  nc[1] == "^"):
-            self.model.grid.move_agent(self, (y,x-1))
+        elif(case == 4):
             self.model.grid.move_agent(self, (y-1,x))
         else:
             pass
+        
+        
+    def check_proximity(self, case):
+        y, x  = self.pos
+        
+        yd, xd = self.destiny
+        
+        #North
+        if(case == 1):
+            if(xd >= x):
+                return True
+
+        #East
+        elif(case == 2):
+            if(yd < y):
+                return True
+
+        #West
+        elif(case == 3):
+            if(yd < y):
+                return True
+
+        #South
+        elif(case == 4):
+            if(xd <= x):
+                return True
+        else:
+            return False
+        
         
     def update_direction(self):
         nc = self.get_neighborhood_content()
         
         center = self.model.grid.get_cell_list_contents(self.pos)
         center = [x for x in self.model.grid.get_cell_list_contents(self.pos) if isinstance(x,Tile)][0].symbol
-        print(center)
+        
             
         if (center == "^"):
             self.direction = "North"
@@ -98,10 +159,13 @@ class Car(Agent):
         elif (center == '>'):
             self.direction = "East"
         elif (center in 'Ss'):
-            self.direction = "Stop"
+            pass
+            #self.direction = "Stop"
+        elif(center == 'D'):
+            self.direction = "Destiny"
         else:
             self.direction = "se rompió este pedo"
-            print(center)
+            
         
     def get_neighborhood_content(self):
         possible_steps = self.model.grid.get_neighborhood(self.pos,
@@ -149,27 +213,39 @@ class ArrangementModel(Model):
             "<": 7,
             "#": 8
         }
-
+        self.destinies = []
+        self.street_tiles = []
         # Set up model objects
         self.grid = MultiGrid(width, height, False)
         self.schedule = SimultaneousActivation(self)
         
         # Create the city
         for (content, x, y) in self.grid.coord_iter():
+            if (self.city[x][y] == 'D'):
+                self.destinies.append((x,y))
+            elif (self.city[x][y] == ('^' or '>' or '<' or 'v')):
+                self.street_tiles.append((x,y))
             tmp = self.city[x][y]
             a = Tile(str((x,y)), tmp, self)
             self.schedule.add(a)
             self.grid.place_agent(a, (x, y))
-            
+        print(self.destinies)
         # Create cars
-        for j in range(self.num_agents):
-            a = Car('Car-'+str(j), self)
-            self.schedule.add(a)
-            #x = random.randrange(self.width)
-            #y = random.randrange(self.height)
-            x = 17
-            y = 6
-            self.grid.place_agent(a, (y, x))
+        #for j in range(self.num_agents):
+            #a = Car('Car-'+str(j), self, random.choice(self.destinies))
+            
+        a = Car('Car-'+str(1), self, (2,4))
+        b = Car('Car-'+str(2), self, (2,23))
+        
+        self.schedule.add(a)
+        self.schedule.add(b)
+        
+
+
+        #self.grid.place_agent(a, random.choice(self.street_tiles))
+        self.grid.place_agent(a, (5,0))
+        self.grid.place_agent(b,(7,0))
+        
               
         # Define collector for the entire grid 
         self.datacollector = DataCollector(
