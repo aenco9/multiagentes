@@ -34,7 +34,7 @@ def initModel():
 
         print(request.form)
         print(number_agents, width, height)
-        agentModel = ArrangementModel(city, number_agents, height, width)
+        agentModel = ArrangementModel(city, number_agents, width, height)
         return jsonify({"message":"Parameters recieved, model initiated."})
 
 @app.route('/getCars', methods=['GET'])
@@ -47,7 +47,7 @@ def getAgents():
         for (a,x,z) in agentModel.grid.coord_iter():
             for agents in a:
                 if isinstance(agents, Car):
-                    carPositions.append({"x": x, "y":0, "z":z})
+                    carPositions.append({"x": z, "y":0, "z":x, "id":int(agents.unique_id[-1])})
                     dir=0
                     if agents.direction=="North":
                         dir=1
@@ -58,6 +58,9 @@ def getAgents():
                     elif agents.direction=="East":
                         dir=4
                     carData.append({"x": int(agents.unique_id[-1]), "y":dir, "z":0})
+        carPositions=sorted(carPositions, key=lambda d: d['id'])
+        for car in carPositions:
+            car.pop("id")
         return jsonify({'positions':carPositions, 'data':carData})
 
 @app.route('/update', methods=['GET'])

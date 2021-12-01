@@ -46,8 +46,12 @@ public class AgentController : MonoBehaviour
         
         timer = timeToUpdate;
 
-        for(int i = 0; i < NAgents; i++)
+        for(int i = 0; i < NAgents; i++){
             agents[i] = Instantiate(carPrefab, Vector3.zero, Quaternion.identity);
+            agents[i].gameObject.name="Car" + i.ToString();
+            agents[i].gameObject.transform.GetChild(0).GetComponent<Renderer>().material.SetColor("_Color", UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f));
+        }
+            
 
         StartCoroutine(SendConfiguration());
     }
@@ -69,16 +73,13 @@ public class AgentController : MonoBehaviour
         {
             for (int s = 0; s < agents.Length; s++)
             {
-                for(int aa=0; aa<agents.Length; aa++){
-                    if (oldPositionsData[s].x==newPositionsData[aa].x){
-                        Vector3 interpolated = Vector3.Lerp(oldPositions[s], newPositions[aa], dt);
-                        agents[s].transform.localPosition = interpolated;
+
+                Vector3 interpolated = Vector3.Lerp(oldPositions[s], newPositions[s], dt);
+                agents[s].transform.localPosition = interpolated;
                     
-                        Vector3 dir = oldPositions[s] - newPositions[aa];
-                        agents[s].transform.rotation = Quaternion.LookRotation(-dir);
-                        break;
-                    }
-                }
+                Vector3 dir = oldPositions[s] - newPositions[s];
+                agents[s].transform.rotation = Quaternion.LookRotation(-dir);
+
             }
             // Move time from the last frame
             timer += Time.deltaTime;
