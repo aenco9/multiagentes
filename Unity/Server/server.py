@@ -47,7 +47,7 @@ def getAgents():
         for (a,x,z) in agentModel.grid.coord_iter():
             for agents in a:
                 if isinstance(agents, Car):
-                    carPositions.append({"x": z, "y":0, "z":x, "id":int(agents.unique_id[-1])})
+                    carPositions.append({"x": z, "y":0, "z":x, "id":int(agents.unique_id[4:])})
                     dir=0
                     if agents.direction=="North":
                         dir=1
@@ -57,11 +57,22 @@ def getAgents():
                         dir =3
                     elif agents.direction=="East":
                         dir=4
-                    carData.append({"x": int(agents.unique_id[-1]), "y":dir, "z":0})
+                    carData.append({"x": int(agents.unique_id[4:]), "y":dir, "z":0})
         carPositions=sorted(carPositions, key=lambda d: d['id'])
         for car in carPositions:
             car.pop("id")
         return jsonify({'positions':carPositions, 'data':carData})
+
+@app.route('/getTrafficLights', methods=['GET'])
+def getTrafficLights():
+    global agentModel
+    if request.method == 'GET':
+        tlPositions = []
+        for (a,x,z) in agentModel.grid.coord_iter():
+            for agents in a:
+                if isinstance(agents, Stoplight):
+                    tlPositions.append({"x": z, "y":agents.color, "z":x})
+        return jsonify({'positions':tlPositions})
 
 @app.route('/update', methods=['GET'])
 def updateModel():
