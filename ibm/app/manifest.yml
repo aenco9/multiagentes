@@ -1,0 +1,6 @@
+applications:
+ - name: multiagentesE1
+   buildpack: python_buildpack
+   memory: 128M
+
+

@@ -49,11 +49,28 @@ public class CityMaker : MonoBehaviour
                 tile.tag="traffic";
                 tile.transform.parent = transform;
                 x += 1;
+            } else if (tiles[i] == 'z') {
+                position = new Vector3(x * tileSize, 0, y * tileSize);
+                tile = Instantiate(roadPrefab, position, Quaternion.identity);
+                tile.transform.parent = transform;
+                tile = Instantiate(semaphorePrefab, position, Quaternion.Euler(0, 180, 0));
+                tile.tag="traffic";
+                tile.transform.parent = transform;
+                x += 1;
             } else if (tiles[i] == 'S') {
                 position = new Vector3(x * tileSize, 0, y * tileSize);
                 tile = Instantiate(roadPrefab, position, Quaternion.Euler(0, 90, 0));
                 tile.transform.parent = transform;
                 tile = Instantiate(semaphorePrefab, position, Quaternion.Euler(0, 90, 0));
+                tile.tag="traffic";
+                tile.transform.parent = transform;
+                x += 1;
+            } else if (tiles[i] == 'Z') {
+                position = new Vector3(x * tileSize, 0, y * tileSize);
+                tile = Instantiate(roadPrefab, position, Quaternion.Euler(0, 90, 0));
+                tile.transform.parent = transform;
+                tile = Instantiate(semaphorePrefab, position, Quaternion.Euler(0, 270, 0));
+                Debug.Log(tile.transform.position);
                 tile.tag="traffic";
                 tile.transform.parent = transform;
                 x += 1;
