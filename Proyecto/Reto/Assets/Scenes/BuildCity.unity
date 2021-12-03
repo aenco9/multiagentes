@@ -330,7 +330,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trafficLights: []
   carPrefab: {fileID: 5946325472549919205, guid: 1fa81430463ac1749aacf788a8f27dc6, type: 3}
-  NAgents: 50
+  NAgents: 30
   timeToUpdate: 0.5
   timer: 0
   dt: 0

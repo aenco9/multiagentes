@@ -22,12 +22,14 @@ public class LightData
 public class AgentController : MonoBehaviour
 {
     string serverUrl = "http://localhost:8585";
+
+
+    //uncomment lines below to run server on IBM cloud (slow)
     //string serverUrl="https://multiagentese1.mybluemix.net";
     string getCarsEndpoint = "/getCars";
     string getTrafficEndpoint = "/getTrafficLights";
     string sendConfigEndpoint = "/init";
     string updateEndpoint = "/update";
-    string end= "/finish";
     AgentData carData;
     LightData trafficLightData;
     GameObject[] agents;
@@ -44,6 +46,8 @@ public class AgentController : MonoBehaviour
 
     public float timeToUpdate = 5.0f, timer, dt;
 
+
+    //Creates containers and instantiates car agents on scene
     void Start()
     {
         carData = new AgentData();
@@ -68,6 +72,7 @@ public class AgentController : MonoBehaviour
         
     }
 
+    //Updates the simulation when then time step is completed
     private void Update() 
     {
         float t = timer/timeToUpdate;
@@ -85,6 +90,7 @@ public class AgentController : MonoBehaviour
         {
             for (int s = 0; s < agents.Length; s++)
             {
+                //Moves the agent to the position determined by the server and only rotates it if it is different than the last step
                 Vector3 interpolated = Vector3.Lerp(oldPositions[s], newPositions[s], dt);
                 agents[s].transform.localPosition = interpolated;
                 if(oldPositions[s]!=newPositions[s]){
@@ -101,6 +107,7 @@ public class AgentController : MonoBehaviour
  
     IEnumerator UpdateSimulation()
     {
+        //Controls the two requests from the server and the step
         UnityWebRequest www = UnityWebRequest.Get(serverUrl + updateEndpoint);
         yield return www.SendWebRequest();
  
@@ -113,6 +120,8 @@ public class AgentController : MonoBehaviour
         }
     }
 
+
+    //Initial simulation configuration
     IEnumerator SendConfiguration(){
         WWWForm form = new WWWForm();
 
@@ -134,9 +143,11 @@ public class AgentController : MonoBehaviour
             StartCoroutine(GetAgentData());
             StartCoroutine(GetTrafficData());
         }
+        //Gets every traffic light GameObject to alternate its color 
         trafficLights = GameObject.FindGameObjectsWithTag("traffic");
     }
 
+    //Gets position data from the server and stores it on its container keeping track of the previous position
     IEnumerator GetAgentData() 
     {
         UnityWebRequest www = UnityWebRequest.Get(serverUrl + getCarsEndpoint);
@@ -161,6 +172,7 @@ public class AgentController : MonoBehaviour
         }
     }
 
+    //Gets traffic light data frome server to turn them on/off
     IEnumerator GetTrafficData() 
     {
         UnityWebRequest www = UnityWebRequest.Get(serverUrl + getTrafficEndpoint);

@@ -22,6 +22,8 @@ public class CityMaker : MonoBehaviour
         
     }
 
+    //Creates de tiles/objects depending on character of text file
+
     void MakeTiles(string tiles)
     {
         int x = 0;
@@ -70,7 +72,6 @@ public class CityMaker : MonoBehaviour
                 tile = Instantiate(roadPrefab, position, Quaternion.Euler(0, 90, 0));
                 tile.transform.parent = transform;
                 tile = Instantiate(semaphorePrefab, position, Quaternion.Euler(0, 270, 0));
-                Debug.Log(tile.transform.position);
                 tile.tag="traffic";
                 tile.transform.parent = transform;
                 x += 1;
